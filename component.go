@@ -6,14 +6,6 @@ import (
 	"github.com/hajimehoshi/ebiten"
 )
 
-var componentsCreated int = 0
-
-func GenComponentId(baseId string) ComponentId {
-	id := fmt.Sprintf("%s %d", baseId, componentsCreated)
-	componentsCreated++
-	return ComponentId(id)
-}
-
 // base component. type case to other things to use
 type Component interface {
 	Init() error
@@ -21,23 +13,25 @@ type Component interface {
 
 	Type() ComponentType
 	Id() ComponentId
-	Parent() Actor
+	Parent() *Actor
+	SetParent(actor *Actor)
 }
 
 type componentImpl struct {
 	cType      ComponentType
 	id         ComponentId
-	boundActor Actor
+	boundActor *Actor
 }
 
 func (c componentImpl) Init() error             { return nil }
 func (c componentImpl) Update(dt float64) error { return nil }
 
-func (c componentImpl) Type() ComponentType { return c.cType }
-func (c componentImpl) Id() ComponentId     { return c.id }
-func (c componentImpl) Parent() Actor       { return c.boundActor }
+func (c componentImpl) Type() ComponentType    { return c.cType }
+func (c componentImpl) Id() ComponentId        { return c.id }
+func (c componentImpl) Parent() *Actor         { return c.boundActor }
+func (c componentImpl) SetParent(actor *Actor) { c.boundActor = actor }
 
-func NewComponent(cType ComponentType, baseId string, parent Actor) (Component, error) {
+func NewComponent(cType ComponentType, baseId string, parent *Actor) (Component, error) {
 	return &componentImpl{
 		cType:      cType,
 		id:         GenComponentId(baseId),
@@ -50,17 +44,26 @@ type ComponentGraphical interface {
 	Component
 	ToDraw() *ebiten.Image
 	DrawOrder() int
+	Size() Vec2
+	RelativePos() Vec2
+	Rotation() float64
 }
 
 type componentGraphicalImpl struct {
 	componentImpl
 	drawOrderPos int
+	size         Vec2    // size in world units
+	relativePos  Vec2    // top left in world units relative to the transform
+	rotation     float64 // rotation relative to the transform
 }
 
 func (c componentGraphicalImpl) ToDraw() *ebiten.Image { return nil }
 func (c componentGraphicalImpl) DrawOrder() int        { return c.drawOrderPos }
+func (c componentGraphicalImpl) Size() Vec2            { return c.size }
+func (c componentGraphicalImpl) RelativePos() Vec2     { return c.relativePos }
+func (c componentGraphicalImpl) Rotation() float64     { return c.rotation }
 
-func NewComponentGraphical(baseId string, parent Actor, drawOrderPos int) (Component, error) {
+func NewComponentGraphical(baseId string, parent *Actor, drawOrderPos int) (Component, error) {
 	baseComponent, err := NewComponent(ComponentTypeGraphical, baseId, parent)
 	if err != nil {
 		return nil, err
@@ -68,6 +71,7 @@ func NewComponentGraphical(baseId string, parent Actor, drawOrderPos int) (Compo
 	return &componentGraphicalImpl{
 		componentImpl: baseComponent.(componentImpl),
 		drawOrderPos:  drawOrderPos,
+		size:          Vec2{1, 1},
 	}, nil
 }
 
@@ -102,18 +106,19 @@ func (c *componentTransformImpl) Translate(delta Vec2)    { c.pos.Translate(delt
 func (c componentTransformImpl) Scale() Vec2              { return c.scale }
 func (c *componentTransformImpl) SetScale(newScale Vec2)  { c.scale = newScale }
 func (c *componentTransformImpl) ScaleBy(percent float64) { c.scale.MultScalar(percent) }
-func (c *componentTransformImpl) ScaleTo(percent float64) { c.scale = Vec2{1, 1} }
+func (c *componentTransformImpl) ScaleTo(percent float64) { c.scale = Vec2{percent, percent} }
 
 func (c componentTransformImpl) Rotation() float64                { return c.rotation }
 func (c *componentTransformImpl) SetRotation(newRotation float64) { c.rotation = newRotation }
 
-func NewComponentTransform(parent Actor) (Component, error) {
+func NewComponentTransform(parent *Actor) (Component, error) {
 	baseComponent, err := NewComponent(ComponentTypeTransform, "transform", parent)
 	if err != nil {
 		return nil, err
 	}
 	return &componentTransformImpl{
 		componentImpl: baseComponent.(componentImpl),
+		scale:         Vec2{1, 1},
 	}, nil
 }
 
@@ -168,7 +173,7 @@ func (c *componentPhysicsImpl) ApplyForce(force Vec2) {
 	c.Accelerate(force)
 }
 
-func NewComponentPhysics(parent Actor) (Component, error) {
+func NewComponentPhysics(parent *Actor) (Component, error) {
 	baseComponent, err := NewComponent(ComponentTypePhysics, "physics", parent)
 	if err != nil {
 		return nil, err

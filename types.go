@@ -1,10 +1,15 @@
 package nagae
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 var (
 	ErrComponentPresent    = errors.New("component is already present")
 	ErrComponentNotPresent = errors.New("component is not present")
+
+	ErrScenePresent = errors.New("scene is already present")
 )
 
 // ComponentType is an enum for ENGINE components
@@ -43,3 +48,18 @@ func (c ComponentList) CheckComponent(other ComponentType) bool {
 
 // ComponentId is a string identifier for components
 type ComponentId string
+
+// NOTE -- generating unique component ids is discouraged because of only allowing unique components per actor
+var componentsCreated int = 0
+
+func GenComponentId(baseId string) ComponentId {
+	id := fmt.Sprintf("%s %d", baseId, componentsCreated)
+	componentsCreated++
+	return ComponentId(id)
+}
+
+// SceneId is just another identifier for a scene
+type SceneId string
+
+// ActorId is the same
+type ActorId string

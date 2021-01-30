@@ -12,7 +12,7 @@ type System interface {
 }
 
 type systemImpl struct {
-	attachedScene Scene
+	attachedScene *Scene
 }
 
 func (s systemImpl) Init() error             { return nil }
@@ -76,7 +76,6 @@ func (g *graphicsSystemImpl) Draw(screen *ebiten.Image) error {
 		if !present {
 			continue
 		}
-
 		transformComp, present := actor.GetComponentByType(ComponentTypeTransform)
 		if !present {
 			continue
@@ -89,14 +88,26 @@ func (g *graphicsSystemImpl) Draw(screen *ebiten.Image) error {
 		if img == nil {
 			continue
 		}
-		// scale up to 100px = 1unit
-		pos := transformCompImpl.Position()
-		pos.MultScalar(100)
-		scale := transformCompImpl.Scale()
-		scale.MultScalar(100)
-		rot := transformCompImpl.Rotation()
 
-		drawCall := GetDrawCall(img, pos.x, pos.y, scale.x, scale.y, rot)
+		// calculate position relative to transform
+		relativePos := graphicalCompImpl.RelativePos()
+		relativeSize := graphicalCompImpl.Size()
+		relativeRot := graphicalCompImpl.Rotation()
+
+		transPos := transformCompImpl.Position()
+		transSize := transformCompImpl.Scale()
+		transRot := transformCompImpl.Rotation()
+
+		relativePos.Rotate(transRot)
+		relativePos.Translate(transPos)
+		relativeRot += transRot
+		relativeSize.MultVec(transSize)
+
+		// scale up to 100px = 1unit
+		relativePos.MultScalar(100)
+		relativeSize.MultScalar(100)
+
+		drawCall := GetDrawCall(img, relativePos.X, relativePos.Y, relativeSize.X, relativeSize.Y, relativeRot)
 		order := graphicalCompImpl.DrawOrder()
 
 		if calls, present := drawOrders[order]; present {
