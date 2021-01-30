@@ -1,4 +1,4 @@
-module github.com/val-is/nagage
+module github.com/val-is/nagae
 
 go 1.15
 
