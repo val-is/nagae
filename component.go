@@ -31,11 +31,10 @@ func (c componentImpl) Id() ComponentId        { return c.id }
 func (c componentImpl) Parent() *Actor         { return c.boundActor }
 func (c componentImpl) SetParent(actor *Actor) { c.boundActor = actor }
 
-func NewComponent(cType ComponentType, baseId string, parent *Actor) (Component, error) {
+func NewComponent(cType ComponentType, baseId string) (Component, error) {
 	return &componentImpl{
-		cType:      cType,
-		id:         GenComponentId(baseId),
-		boundActor: parent,
+		cType: cType,
+		id:    GenComponentId(baseId),
 	}, nil
 }
 
@@ -63,8 +62,8 @@ func (c componentGraphicalImpl) Size() Vec2            { return c.size }
 func (c componentGraphicalImpl) RelativePos() Vec2     { return c.relativePos }
 func (c componentGraphicalImpl) Rotation() float64     { return c.rotation }
 
-func NewComponentGraphical(baseId string, parent *Actor, drawOrderPos int) (Component, error) {
-	baseComponent, err := NewComponent(ComponentTypeGraphical, baseId, parent)
+func NewComponentGraphical(baseId string, drawOrderPos int) (Component, error) {
+	baseComponent, err := NewComponent(ComponentTypeGraphical, baseId)
 	if err != nil {
 		return nil, err
 	}
@@ -111,8 +110,8 @@ func (c *componentTransformImpl) ScaleTo(percent float64) { c.scale = Vec2{perce
 func (c componentTransformImpl) Rotation() float64                { return c.rotation }
 func (c *componentTransformImpl) SetRotation(newRotation float64) { c.rotation = newRotation }
 
-func NewComponentTransform(parent *Actor) (Component, error) {
-	baseComponent, err := NewComponent(ComponentTypeTransform, "transform", parent)
+func NewComponentTransform() (Component, error) {
+	baseComponent, err := NewComponent(ComponentTypeTransform, "transform")
 	if err != nil {
 		return nil, err
 	}
@@ -173,8 +172,8 @@ func (c *componentPhysicsImpl) ApplyForce(force Vec2) {
 	c.Accelerate(force)
 }
 
-func NewComponentPhysics(parent *Actor) (Component, error) {
-	baseComponent, err := NewComponent(ComponentTypePhysics, "physics", parent)
+func NewComponentPhysics() (Component, error) {
+	baseComponent, err := NewComponent(ComponentTypePhysics, "physics")
 	if err != nil {
 		return nil, err
 	}

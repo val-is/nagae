@@ -10,6 +10,21 @@ type SceneManager struct {
 	sharedData map[string]interface{}
 }
 
+func NewSceneManager(startScene *Scene) *SceneManager {
+	manager := &SceneManager{
+		scenes:       make(map[SceneId]*Scene),
+		currentScene: startScene.sceneId,
+		sceneStack:   make([]SceneId, 0),
+
+		sharedData: make(map[string]interface{}),
+	}
+	err := manager.AddScene(startScene)
+	if err != nil {
+		panic("something went (impossibly) wrong when creating a scene manager")
+	}
+	return manager
+}
+
 func (s SceneManager) CurrentScene() SceneId { return s.currentScene }
 
 func (s *SceneManager) Transition() error {

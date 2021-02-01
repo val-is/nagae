@@ -8,6 +8,13 @@ type Actor struct {
 	components    map[ComponentId]Component
 }
 
+func NewActor(actorId ActorId) *Actor {
+	return &Actor{
+		actorId:    actorId,
+		components: make(map[ComponentId]Component),
+	}
+}
+
 func (a Actor) Id() ActorId         { return a.actorId }
 func (a Actor) ParentScene() *Scene { return a.parentScene }
 

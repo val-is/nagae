@@ -27,6 +27,14 @@ type physicsSystemImpl struct {
 	systemImpl
 }
 
+func NewPhysicsSystem(scene *Scene) PhysicsSystem {
+	return &physicsSystemImpl{
+		systemImpl: systemImpl{
+			attachedScene: scene,
+		},
+	}
+}
+
 func (p *physicsSystemImpl) Update(dt float64) error {
 	for _, actor := range p.attachedScene.actors {
 		physicsComp, present := actor.GetComponentByType(ComponentTypePhysics)
@@ -65,6 +73,14 @@ type GraphicsSystem interface {
 
 type graphicsSystemImpl struct {
 	systemImpl
+}
+
+func NewGraphicsSystem(scene *Scene) GraphicsSystem {
+	return &graphicsSystemImpl{
+		systemImpl: systemImpl{
+			attachedScene: scene,
+		},
+	}
 }
 
 func (g *graphicsSystemImpl) Draw(screen *ebiten.Image) error {

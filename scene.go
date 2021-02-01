@@ -12,6 +12,19 @@ type Scene struct {
 	graphicsSystem GraphicsSystem
 }
 
+func NewScene(sceneId SceneId) *Scene {
+	scene := &Scene{
+		sceneId: sceneId,
+
+		actors: make(map[ActorId]*Actor),
+	}
+	physics := NewPhysicsSystem(scene)
+	scene.physicsSystem = physics
+	graphics := NewGraphicsSystem(scene)
+	scene.graphicsSystem = graphics
+	return scene
+}
+
 func (s Scene) Id() SceneId            { return s.sceneId }
 func (s Scene) Manager() *SceneManager { return s.manager }
 
