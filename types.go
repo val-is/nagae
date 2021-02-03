@@ -12,7 +12,7 @@ var (
 	ErrScenePresent = errors.New("scene is already present")
 )
 
-// ComponentType is an enum for ENGINE components
+// ComponentType is an enum for ENGINE components. this defines what type of (default) component something is
 type ComponentType uint16
 
 const (
@@ -20,29 +20,43 @@ const (
 	ComponentTypeGraphical
 	ComponentTypePhysics
 
-	// ComponentTypeCustom is designed to be used for things like scripts
+	ComponentTypeSprite
+	ComponentTypeSpriteAnimated
+
+	ComponentTypeCustom
+)
+
+// ComponentSystem is an enum for ENGINE components. this defines what system uses the object
+type ComponentSystem uint16
+
+const (
+	ComponentSystemTransform ComponentSystem = iota
+	ComponentSystemGraphical
+	ComponentSystemPhysics
+
+	// ComponentSystemCustom is designed to be used for things like scripts
 	// there can be INFINITE of the same type. be careful
 	// (logically this is ok because these types are reserved for engine components)
 	// (cont., any others aren't talking to the engine systems)
-	ComponentTypeCustom
+	ComponentSystemCustom
 )
 
 // ComponentList is a bitmask containing info on what ENGINE components are present
 type ComponentList uint64
 
-func (c ComponentList) AddComponent(other ComponentType) ComponentList {
-	if other == ComponentTypeCustom {
+func (c ComponentList) AddComponent(other ComponentSystem) ComponentList {
+	if other == ComponentSystemCustom {
 		// we don't keep track of custom components that are added
 		return c
 	}
 	return ComponentList(uint64(c) & (1 << uint16(other)))
 }
 
-func (c ComponentList) RemoveComponent(other ComponentType) ComponentList {
+func (c ComponentList) RemoveComponent(other ComponentSystem) ComponentList {
 	return ComponentList(uint64(c) & (0 << uint16(other)))
 }
 
-func (c ComponentList) CheckComponent(other ComponentType) bool {
+func (c ComponentList) CheckComponent(other ComponentSystem) bool {
 	return uint64(c)&(1<<uint16(other)) == 1
 }
 

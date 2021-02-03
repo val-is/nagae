@@ -37,11 +37,11 @@ func NewPhysicsSystem(scene *Scene) PhysicsSystem {
 
 func (p *physicsSystemImpl) Update(dt float64) error {
 	for _, actor := range p.attachedScene.actors {
-		physicsComp, present := actor.GetComponentByType(ComponentTypePhysics)
+		physicsComp, present := actor.GetComponentBySystemType(ComponentSystemPhysics)
 		if !present {
 			continue
 		}
-		transformComp, present := actor.GetComponentByType(ComponentTypeTransform)
+		transformComp, present := actor.GetComponentBySystemType(ComponentSystemTransform)
 		if !present {
 			continue
 		}
@@ -88,11 +88,11 @@ func (g *graphicsSystemImpl) Draw(screen *ebiten.Image) error {
 	drawOrders := make(map[int][]DrawCall)
 	drawLayers := make([]int, 0)
 	for _, actor := range g.attachedScene.actors {
-		graphicalComp, present := actor.GetComponentByType(ComponentTypeGraphical)
+		graphicalComp, present := actor.GetComponentBySystemType(ComponentSystemGraphical)
 		if !present {
 			continue
 		}
-		transformComp, present := actor.GetComponentByType(ComponentTypeTransform)
+		transformComp, present := actor.GetComponentBySystemType(ComponentSystemTransform)
 		if !present {
 			continue
 		}
