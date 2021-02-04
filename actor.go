@@ -57,7 +57,7 @@ func (a *Actor) AddComponent(component Component) error {
 	}
 	component.SetParent(a)
 	a.components[component.Id()] = component
-	a.componentMask.AddComponent(component.SystemType())
+	a.componentMask = a.componentMask.AddComponent(component.SystemType())
 	return nil
 }
 

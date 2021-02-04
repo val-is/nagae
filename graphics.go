@@ -1,8 +1,9 @@
 package nagae
 
 import (
+	"fmt"
 	"image"
-	"math"
+	"path/filepath"
 
 	"github.com/hajimehoshi/ebiten"
 	"github.com/hajimehoshi/ebiten/ebitenutil"
@@ -24,6 +25,18 @@ func LoadImageFromPath(path string) (*ebiten.Image, error) {
 	return ebitenImage, nil
 }
 
+func LoadImagesFromDir(path string, numImages int) ([]*ebiten.Image, error) {
+	images := make([]*ebiten.Image, 0)
+	for i := 0; i < numImages; i++ {
+		img, err := LoadImageFromPath(filepath.Join(path, fmt.Sprintf("%d.png", i)))
+		if err != nil {
+			return nil, err
+		}
+		images = append(images, img)
+	}
+	return images, nil
+}
+
 type Sprite interface {
 	Image() *ebiten.Image
 	GetSize() (float64, float64)
@@ -35,7 +48,7 @@ type spriteImpl struct {
 }
 
 func (s spriteImpl) Image() *ebiten.Image        { return s.loadedImage }
-func (s spriteImpl) GetSize() (float64, float64) { return s.width, s.height }
+func (s spriteImpl) GetSize() (float64, float64) { return s.width / 100, s.height / 100 }
 
 func NewStaticSprite(image *ebiten.Image) Sprite {
 	wInt, hInt := image.Size()
@@ -73,6 +86,16 @@ type animatedSpriteImpl struct {
 	active               bool
 }
 
+func NewAnimatedSprite(images []*ebiten.Image, secondsToLoop float64, loop bool) AnimatedSprite {
+	s := animatedSpriteImpl{
+		loadedFrames: images,
+		loop:         loop,
+		active:       true,
+	}
+	s.SetSecondsToRun(secondsToLoop)
+	return &s
+}
+
 func (a animatedSpriteImpl) Active() bool                { return a.active }
 func (a *animatedSpriteImpl) SetActive(active bool)      { a.active = active }
 func (a animatedSpriteImpl) CurrentFrame() int           { return a.currentFrame }
@@ -95,7 +118,7 @@ func (a *animatedSpriteImpl) Image() *ebiten.Image {
 
 func (a animatedSpriteImpl) GetSize() (float64, float64) {
 	intW, intH := a.loadedFrames[a.CurrentFrame()].Size()
-	return float64(intW), float64(intH)
+	return float64(intW) / 100, float64(intH) / 100
 }
 
 func (a *animatedSpriteImpl) NextFrame() {
@@ -134,7 +157,7 @@ func GetDrawCall(image *ebiten.Image, x, y, w, h, angle float64) DrawCall {
 	drawOptions.GeoM.Reset()
 	imageW, imageH := image.Size()
 	drawOptions.GeoM.Scale(w/float64(imageW), h/float64(imageH))
-	drawOptions.GeoM.Rotate(2 * math.Pi * angle)
+	drawOptions.GeoM.Rotate(angle)
 	drawOptions.GeoM.Translate(x, y)
 	return func(screen *ebiten.Image) error {
 		return screen.DrawImage(image, &drawOptions)

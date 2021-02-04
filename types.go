@@ -30,7 +30,8 @@ const (
 type ComponentSystem uint16
 
 const (
-	ComponentSystemTransform ComponentSystem = iota
+	ComponentSystemDefault ComponentSystem = iota
+	ComponentSystemTransform
 	ComponentSystemGraphical
 	ComponentSystemPhysics
 
@@ -49,7 +50,7 @@ func (c ComponentList) AddComponent(other ComponentSystem) ComponentList {
 		// we don't keep track of custom components that are added
 		return c
 	}
-	return ComponentList(uint64(c) & (1 << uint16(other)))
+	return ComponentList(uint64(c) | (1 << uint16(other)))
 }
 
 func (c ComponentList) RemoveComponent(other ComponentSystem) ComponentList {
@@ -57,7 +58,7 @@ func (c ComponentList) RemoveComponent(other ComponentSystem) ComponentList {
 }
 
 func (c ComponentList) CheckComponent(other ComponentSystem) bool {
-	return uint64(c)&(1<<uint16(other)) == 1
+	return uint64(c)&(1<<uint16(other)) != 0
 }
 
 // ComponentId is a string identifier for components

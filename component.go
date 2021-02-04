@@ -49,7 +49,9 @@ type ComponentGraphical interface {
 	DrawOrder() int
 	Size() Vec2
 	RelativePos() Vec2
+	SetRelativePos(v Vec2)
 	Rotation() float64
+	SetRotation(r float64)
 }
 
 type componentGraphicalImpl struct {
@@ -60,11 +62,13 @@ type componentGraphicalImpl struct {
 	rotation     float64 // rotation relative to the transform
 }
 
-func (c componentGraphicalImpl) ToDraw() *ebiten.Image { return nil }
-func (c componentGraphicalImpl) DrawOrder() int        { return c.drawOrderPos }
-func (c componentGraphicalImpl) Size() Vec2            { return c.size }
-func (c componentGraphicalImpl) RelativePos() Vec2     { return c.relativePos }
-func (c componentGraphicalImpl) Rotation() float64     { return c.rotation }
+func (c componentGraphicalImpl) ToDraw() *ebiten.Image  { return nil }
+func (c componentGraphicalImpl) DrawOrder() int         { return c.drawOrderPos }
+func (c componentGraphicalImpl) Size() Vec2             { return c.size }
+func (c componentGraphicalImpl) RelativePos() Vec2      { return c.relativePos }
+func (c *componentGraphicalImpl) SetRelativePos(v Vec2) { c.relativePos = v }
+func (c componentGraphicalImpl) Rotation() float64      { return c.rotation }
+func (c *componentGraphicalImpl) SetRotation(r float64) { c.rotation = r } // DANGER DANGER BROKEN MATH
 
 func NewComponentGraphical(baseId string, drawOrderPos int) (ComponentGraphical, error) {
 	baseComponent, err := NewComponent(ComponentSystemGraphical, ComponentTypeGraphical, baseId)
@@ -72,7 +76,7 @@ func NewComponentGraphical(baseId string, drawOrderPos int) (ComponentGraphical,
 		return nil, err
 	}
 	return &componentGraphicalImpl{
-		componentImpl: baseComponent.(componentImpl),
+		componentImpl: *baseComponent.(*componentImpl),
 		drawOrderPos:  drawOrderPos,
 		size:          Vec2{1, 1},
 	}, nil
@@ -104,7 +108,7 @@ func NewComponentSprite(baseId string, drawOrderPos int, sprite Sprite) (Compone
 	}
 	baseComponent.(*componentGraphicalImpl).componentType = ComponentTypeSprite
 	return &componentGraphicalSpriteImpl{
-		componentGraphicalImpl: baseComponent.(componentGraphicalImpl),
+		componentGraphicalImpl: *baseComponent.(*componentGraphicalImpl),
 		sprite:                 sprite,
 	}, nil
 }
@@ -140,7 +144,7 @@ func NewComponentAnimatedSprite(baseId string, drawOrderPos int, animatedSprite 
 	}
 	baseComponent.(*componentGraphicalImpl).componentType = ComponentTypeSpriteAnimated
 	return &componentGraphicalAnimatedSpriteImpl{
-		componentGraphicalImpl: baseComponent.(componentGraphicalImpl),
+		componentGraphicalImpl: *baseComponent.(*componentGraphicalImpl),
 		animatedSprite:         animatedSprite,
 	}, nil
 }
@@ -187,7 +191,7 @@ func NewComponentTransform() (ComponentTransform, error) {
 		return nil, err
 	}
 	return &componentTransformImpl{
-		componentImpl: baseComponent.(componentImpl),
+		componentImpl: *baseComponent.(*componentImpl),
 		scale:         Vec2{1, 1},
 	}, nil
 }
@@ -249,7 +253,7 @@ func NewComponentPhysics() (ComponentPhysics, error) {
 		return nil, err
 	}
 	return &componentPhysicsImpl{
-		componentImpl: baseComponent.(componentImpl),
+		componentImpl: *baseComponent.(*componentImpl),
 		mass:          1,
 	}, nil
 }
