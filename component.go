@@ -18,33 +18,60 @@ type Component interface {
 	SetParent(actor *Actor)
 }
 
-type componentImpl struct {
-	cType         ComponentSystem
-	componentType ComponentType
-	id            ComponentId
-	boundActor    *Actor
+type ComponentImpl struct {
+	cSystemType ComponentSystem
+	cType       ComponentType
+	ID          ComponentId
+	boundActor  *Actor
 }
 
-func (c componentImpl) Init() error             { return nil }
-func (c componentImpl) Update(dt float64) error { return nil }
+func (c ComponentImpl) Init() error             { return nil }
+func (c ComponentImpl) Update(dt float64) error { return nil }
 
-func (c componentImpl) SystemType() ComponentSystem  { return c.cType }
-func (c componentImpl) ComponentType() ComponentType { return c.componentType }
-func (c componentImpl) Id() ComponentId              { return c.id }
-func (c componentImpl) Parent() *Actor               { return c.boundActor }
-func (c componentImpl) SetParent(actor *Actor)       { c.boundActor = actor }
+func (c ComponentImpl) SystemType() ComponentSystem  { return c.cSystemType }
+func (c ComponentImpl) ComponentType() ComponentType { return c.cType }
+func (c ComponentImpl) Id() ComponentId              { return c.ID }
+func (c ComponentImpl) Parent() *Actor               { return c.boundActor }
+func (c *ComponentImpl) SetParent(actor *Actor)      { c.boundActor = actor }
 
 func NewComponent(cType ComponentSystem, componentType ComponentType, baseId string) (Component, error) {
-	return &componentImpl{
-		cType:         cType,
-		componentType: componentType,
-		id:            GenComponentId(baseId),
+	return &ComponentImpl{
+		cSystemType: cType,
+		cType:       componentType,
+		ID:          ComponentId(baseId),
+	}, nil
+}
+
+// super stripped graphical component. used for more overridden things
+type ComponentGraphicalBase interface {
+	Draw(screen *ebiten.Image) error
+	DrawOrder() int
+	Raw() bool
+}
+
+type ComponentGraphicalBaseImpl struct {
+	ComponentImpl
+	drawOrderPos int
+}
+
+func (c ComponentGraphicalBaseImpl) Draw(screen *ebiten.Image) error { return nil }
+func (c ComponentGraphicalBaseImpl) DrawOrder() int                  { return c.drawOrderPos }
+func (c ComponentGraphicalBaseImpl) Raw() bool                       { return true }
+
+func NewComponentGraphicalRaw(baseId string, drawOrderPos int) (ComponentGraphicalBase, error) {
+	baseComponent, err := NewComponent(ComponentSystemGraphical, ComponentTypeGraphicalRaw, baseId)
+	if err != nil {
+		return nil, err
+	}
+	return &ComponentGraphicalBaseImpl{
+		ComponentImpl: *baseComponent.(*ComponentImpl),
+		drawOrderPos:  drawOrderPos,
 	}, nil
 }
 
 // graphical component. found and called when rendering
 type ComponentGraphical interface {
-	Component
+	ComponentGraphicalBase
 	ToDraw() *ebiten.Image
 	DrawOrder() int
 	Size() Vec2
@@ -55,30 +82,29 @@ type ComponentGraphical interface {
 }
 
 type componentGraphicalImpl struct {
-	componentImpl
-	drawOrderPos int
-	size         Vec2    // size in world units
-	relativePos  Vec2    // top left in world units relative to the transform
-	rotation     float64 // rotation relative to the transform
+	ComponentGraphicalBaseImpl
+	size        Vec2    // size in world units
+	relativePos Vec2    // top left in world units relative to the transform
+	rotation    float64 // rotation relative to the transform
 }
 
 func (c componentGraphicalImpl) ToDraw() *ebiten.Image  { return nil }
-func (c componentGraphicalImpl) DrawOrder() int         { return c.drawOrderPos }
 func (c componentGraphicalImpl) Size() Vec2             { return c.size }
 func (c componentGraphicalImpl) RelativePos() Vec2      { return c.relativePos }
 func (c *componentGraphicalImpl) SetRelativePos(v Vec2) { c.relativePos = v }
 func (c componentGraphicalImpl) Rotation() float64      { return c.rotation }
 func (c *componentGraphicalImpl) SetRotation(r float64) { c.rotation = r } // DANGER DANGER BROKEN MATH
+func (c componentGraphicalImpl) Raw() bool              { return false }
 
 func NewComponentGraphical(baseId string, drawOrderPos int) (ComponentGraphical, error) {
-	baseComponent, err := NewComponent(ComponentSystemGraphical, ComponentTypeGraphical, baseId)
+	baseComponent, err := NewComponentGraphicalRaw(baseId, drawOrderPos)
 	if err != nil {
 		return nil, err
 	}
+	baseComponent.(*ComponentGraphicalBaseImpl).cType = ComponentTypeGraphical
 	return &componentGraphicalImpl{
-		componentImpl: *baseComponent.(*componentImpl),
-		drawOrderPos:  drawOrderPos,
-		size:          Vec2{1, 1},
+		ComponentGraphicalBaseImpl: *baseComponent.(*ComponentGraphicalBaseImpl),
+		size:                       Vec2{1, 1},
 	}, nil
 }
 
@@ -106,7 +132,7 @@ func NewComponentSprite(baseId string, drawOrderPos int, sprite Sprite) (Compone
 	if err != nil {
 		return nil, err
 	}
-	baseComponent.(*componentGraphicalImpl).componentType = ComponentTypeSprite
+	baseComponent.(*componentGraphicalImpl).cType = ComponentTypeSprite
 	return &componentGraphicalSpriteImpl{
 		componentGraphicalImpl: *baseComponent.(*componentGraphicalImpl),
 		sprite:                 sprite,
@@ -142,7 +168,7 @@ func NewComponentAnimatedSprite(baseId string, drawOrderPos int, animatedSprite 
 	if err != nil {
 		return nil, err
 	}
-	baseComponent.(*componentGraphicalImpl).componentType = ComponentTypeSpriteAnimated
+	baseComponent.(*componentGraphicalImpl).cType = ComponentTypeSpriteAnimated
 	return &componentGraphicalAnimatedSpriteImpl{
 		componentGraphicalImpl: *baseComponent.(*componentGraphicalImpl),
 		animatedSprite:         animatedSprite,
@@ -167,7 +193,7 @@ type ComponentTransform interface {
 }
 
 type componentTransformImpl struct {
-	componentImpl
+	ComponentImpl
 	pos      Vec2
 	scale    Vec2
 	rotation float64
@@ -191,7 +217,7 @@ func NewComponentTransform() (ComponentTransform, error) {
 		return nil, err
 	}
 	return &componentTransformImpl{
-		componentImpl: *baseComponent.(*componentImpl),
+		ComponentImpl: *baseComponent.(*ComponentImpl),
 		scale:         Vec2{1, 1},
 	}, nil
 }
@@ -214,7 +240,7 @@ type ComponentPhysics interface {
 }
 
 type componentPhysicsImpl struct {
-	componentImpl
+	ComponentImpl
 
 	mass     float64
 	velocity Vec2
@@ -253,7 +279,7 @@ func NewComponentPhysics() (ComponentPhysics, error) {
 		return nil, err
 	}
 	return &componentPhysicsImpl{
-		componentImpl: *baseComponent.(*componentImpl),
+		ComponentImpl: *baseComponent.(*ComponentImpl),
 		mass:          1,
 	}, nil
 }

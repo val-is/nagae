@@ -48,7 +48,7 @@ type spriteImpl struct {
 }
 
 func (s spriteImpl) Image() *ebiten.Image        { return s.loadedImage }
-func (s spriteImpl) GetSize() (float64, float64) { return s.width / 100, s.height / 100 }
+func (s spriteImpl) GetSize() (float64, float64) { return s.width, s.height }
 
 func NewStaticSprite(image *ebiten.Image) Sprite {
 	wInt, hInt := image.Size()
@@ -118,7 +118,7 @@ func (a *animatedSpriteImpl) Image() *ebiten.Image {
 
 func (a animatedSpriteImpl) GetSize() (float64, float64) {
 	intW, intH := a.loadedFrames[a.CurrentFrame()].Size()
-	return float64(intW) / 100, float64(intH) / 100
+	return float64(intW), float64(intH)
 }
 
 func (a *animatedSpriteImpl) NextFrame() {
@@ -156,9 +156,9 @@ func GetDrawCall(image *ebiten.Image, x, y, w, h, angle float64) DrawCall {
 	drawOptions := ebiten.DrawImageOptions{}
 	drawOptions.GeoM.Reset()
 	imageW, imageH := image.Size()
-	drawOptions.GeoM.Scale(w/float64(imageW), h/float64(imageH))
+	drawOptions.GeoM.Scale(w/float64(imageW)*100, h/float64(imageH)*100)
 	drawOptions.GeoM.Rotate(angle)
-	drawOptions.GeoM.Translate(x, y)
+	drawOptions.GeoM.Translate(x*100, y*100)
 	return func(screen *ebiten.Image) error {
 		return screen.DrawImage(image, &drawOptions)
 	}

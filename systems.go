@@ -98,41 +98,43 @@ func (g *graphicsSystemImpl) Draw(screen *ebiten.Image) error {
 			continue
 		}
 
-		graphicalCompImpl := graphicalComp.(ComponentGraphical)
 		transformCompImpl := transformComp.(ComponentTransform)
-
-		img := graphicalCompImpl.ToDraw()
-		if img == nil {
-			continue
-		}
-
-		// calculate position relative to transform
-		relativePos := graphicalCompImpl.RelativePos()
-		// relativePos.MultScalar(0.01)
-		relativeSize := graphicalCompImpl.Size()
-		// relativeSize.MultScalar(0.01)
-		relativeRot := graphicalCompImpl.Rotation()
 
 		transPos := transformCompImpl.Position()
 		transSize := transformCompImpl.Scale()
 		transRot := transformCompImpl.Rotation()
 
-		relativeSize.MultVec(transSize)
+		graphicalBaseCompImpl := graphicalComp.(ComponentGraphicalBase)
+		drawCall := graphicalBaseCompImpl.Draw
+		order := graphicalBaseCompImpl.DrawOrder()
 
-		s := relativeSize
-		s.MultScalar(-0.5)
-		relativePos.Translate(s)
+		if !graphicalBaseCompImpl.Raw() {
+			graphicalCompImpl := graphicalComp.(ComponentGraphical)
 
-		relativePos.Rotate(transRot)
-		relativePos.Translate(transPos)
-		relativeRot += transRot
+			img := graphicalCompImpl.ToDraw()
+			if img == nil {
+				continue
+			}
 
-		// scale up to 100px = 1unit
-		relativePos.MultScalar(100)
-		relativeSize.MultScalar(100)
+			// calculate position relative to transform
+			relativePos := graphicalCompImpl.RelativePos()
+			// relativePos.MultScalar(0.01)
+			relativeSize := graphicalCompImpl.Size()
+			// relativeSize.MultScalar(0.01)
+			relativeRot := graphicalCompImpl.Rotation()
 
-		drawCall := GetDrawCall(img, relativePos.X, relativePos.Y, relativeSize.X, relativeSize.Y, relativeRot)
-		order := graphicalCompImpl.DrawOrder()
+			relativeSize.MultVec(transSize)
+
+			s := relativeSize
+			s.MultScalar(-0.5)
+			relativePos.Translate(s)
+
+			relativePos.Rotate(transRot)
+			relativePos.Translate(transPos)
+			relativeRot += transRot
+
+			drawCall = GetDrawCall(img, relativePos.X, relativePos.Y, relativeSize.X, relativeSize.Y, relativeRot)
+		}
 
 		if calls, present := drawOrders[order]; present {
 			drawOrders[order] = append(calls, drawCall)

@@ -16,30 +16,30 @@ var (
 type ComponentType uint16
 
 const (
-	ComponentTypeTransform ComponentType = iota
+	ComponentTypeCustom ComponentType = iota
+
+	ComponentTypeTransform
 	ComponentTypeGraphical
+	ComponentTypeGraphicalRaw
 	ComponentTypePhysics
 
 	ComponentTypeSprite
 	ComponentTypeSpriteAnimated
-
-	ComponentTypeCustom
 )
 
 // ComponentSystem is an enum for ENGINE components. this defines what system uses the object
 type ComponentSystem uint16
 
 const (
-	ComponentSystemDefault ComponentSystem = iota
-	ComponentSystemTransform
-	ComponentSystemGraphical
-	ComponentSystemPhysics
-
 	// ComponentSystemCustom is designed to be used for things like scripts
 	// there can be INFINITE of the same type. be careful
 	// (logically this is ok because these types are reserved for engine components)
 	// (cont., any others aren't talking to the engine systems)
-	ComponentSystemCustom
+	ComponentSystemCustom ComponentSystem = iota
+
+	ComponentSystemTransform
+	ComponentSystemGraphical
+	ComponentSystemPhysics
 )
 
 // ComponentList is a bitmask containing info on what ENGINE components are present

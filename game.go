@@ -27,6 +27,7 @@ func NewSceneManager(startScene *Scene) *SceneManager {
 
 func (s SceneManager) CurrentScene() SceneId   { return s.currentScene }
 func (s SceneManager) Scene(id SceneId) *Scene { return s.scenes[s.currentScene] }
+func (s *SceneManager) Init() error            { return s.scenes[s.currentScene].Init() }
 
 func (s *SceneManager) Transition() error {
 	s.currentScene = s.sceneStack[0]

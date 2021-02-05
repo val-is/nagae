@@ -1,6 +1,8 @@
 package nagae
 
-import "github.com/hajimehoshi/ebiten"
+import (
+	"github.com/hajimehoshi/ebiten"
+)
 
 type Scene struct {
 	sceneId SceneId
